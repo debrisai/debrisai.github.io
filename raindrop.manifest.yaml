@@ -1,0 +1,39 @@
+name: debrisai-backend
+version: 0.1.0
+description: DebrisAI backend - SmartBuckets, SmartSQL, SmartMemory, SmartInference
+components:
+  - name: rubble-images
+    type: SmartBuckets
+    config:
+      public: false
+      lifecycle_days: 3650
+
+  - name: parts-index
+    type: SmartSQL
+    schema:
+      - name: id
+        type: string
+      - name: image_url
+        type: string
+      - name: materials
+        type: json
+      - name: segments
+        type: json
+      - name: fit_score
+        type: number
+      - name: owner
+        type: string
+      - name: location
+        type: json
+      - name: created_at
+        type: datetime
+
+  - name: user-memory
+    type: SmartMemory
+
+  - name: inference-router
+    type: SmartInference
+    config:
+      external_url: https://YOUR-VULTR-ENDPOINT/run_inference
+      method: POST
+      timeout_seconds: 60
