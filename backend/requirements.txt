@@ -1,3 +1,4 @@
 Flask
+werkzeug
 google-cloud-aiplatform
 confluent-kafka

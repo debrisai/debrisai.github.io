@@ -1,59 +1,29 @@
-# Debris AI Backend
+# Debris AI
 
-This project provides a backend for the Debris AI application. It analyzes images of construction rubble to determine their reuse potential.
+Debris AI is a hackathon project that analyzes images of construction debris to identify materials, estimate reuse feasibility, and provide safe, non-structural reuse suggestions.
 
-## Deployment on Google Cloud
+## Project Structure
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/debris-ai-backend.git
-    cd debris-ai-backend
-    ```
+The project is organized into the following directories:
 
-2.  **Set up a Google Cloud project:**
-    *   Create a new project in the [Google Cloud Console](https://console.cloud.google.com/).
-    *   Enable the Cloud Run, Cloud Storage, and Vertex AI APIs.
-    *   Create a service account with the "Cloud Run Invoker", "Storage Object Admin", and "Vertex AI User" roles.
-    *   Download the service account key as a JSON file and save it as `gcp-credentials.json` in the project root.
+*   `frontend/`: Contains the user interface for the application.
+*   `backend/`: Contains the core backend logic, including the API server, Vertex AI integration, and Kafka streaming.
+*   `models/`: Contains a conceptual notebook for training a verifier model.
+*   `deployment/`: Contains documentation for setting up the project on Google Cloud and Confluent Cloud.
 
-3.  **Configure Confluent Cloud:**
-    *   Create a new Kafka cluster in [Confluent Cloud](https://confluent.cloud/).
-    *   Create a new topic for the inference results.
-    *   Generate API keys for the Kafka cluster.
+## Backend
 
-4.  **Set up environment variables:**
-    *   Create a `.env` file in the project root and add the following variables:
-        ```
-        GOOGLE_APPLICATION_CREDENTIALS=gcp-credentials.json
-        KAFKA_BOOTSTRAP_SERVERS=<your-kafka-bootstrap-servers>
-        KAFKA_API_KEY=<your-kafka-api-key>
-        KAFKA_API_SECRET=<your-kafka-api-secret>
-        KAFKA_TOPIC=<your-kafka-topic>
-        ```
+The backend is a Python Flask application designed to be deployed on Cloud Run. It exposes two endpoints:
 
-5.  **Build and deploy the Docker image:**
-    *   Build the Docker image:
-        ```bash
-        docker build -t gcr.io/your-gcp-project-id/debris-ai-backend .
-        ```
-    *   Push the Docker image to Google Container Registry:
-        ```bash
-        docker push gcr.io/your-gcp-project-id/debris-ai-backend
-        ```
-    *   Deploy the image to Cloud Run:
-        ```bash
-        gcloud run deploy debris-ai-backend \
-          --image gcr.io/your-gcp-project-id/debris-ai-backend \
-          --platform managed \
-          --region us-central1 \
-          --allow-unauthenticated
-        ```
+*   `POST /analyze-image`: Accepts an image of construction debris, analyzes it using Gemini, and returns a JSON response with material identification, reuse feasibility, and reuse suggestions.
+*   `POST /chat`: Accepts a text query and returns a response from Gemini.
 
-## API Endpoints
+The backend also integrates with Confluent Cloud to stream events for every request.
 
-*   `POST /analyze-image`: Accepts an image file and returns a JSON object with the analysis results.
-*   `POST /chat`: (Not implemented in this version)
+## Safety
 
-## Kafka Producer
+Debris AI prioritizes safety by providing a disclaimer with every analysis and offering conservative, non-structural reuse suggestions. A verification layer is also in place to re-prompt the model with stricter instructions if the initial confidence score is low.
 
-The `kafka_producer.py` module sends the analysis results to a Kafka topic in Confluent Cloud.
+## Getting Started
+
+To get started with the project, please refer to the documentation in the `deployment/` directory.

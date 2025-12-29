@@ -1,0 +1,3 @@
+# This file is a placeholder for Confluent Cloud configuration.
+# In a real-world scenario, you might store topic names, etc.
+# For this project, all configuration is handled via environment variables.
