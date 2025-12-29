@@ -1,39 +1,59 @@
-# DebrisAI Backend Package (ready-to-deploy)
+# Debris AI Backend
 
-This archive contains the minimal backend and inference scaffold for DebrisAI:
-- `raindrop.manifest.yaml` - Raindrop manifest (SmartBuckets, SmartSQL, SmartMemory, SmartInference)
-- `server/` - Node.js Raindrop backend exposing `/infer`
-- `inference/` - FastAPI inference service (placeholder) + Dockerfile
-- `elevenlabs-tts.js` - example ElevenLabs TTS helper
+This project provides a backend for the Debris AI application. It analyzes images of construction rubble to determine their reuse potential.
 
-## Quick start (local testing)
-1. Inference service (local):
-   ```
-   cd inference
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   uvicorn main:app --reload --host 0.0.0.0 --port 8000
-   ```
-   Test:
-   ```
-   curl -X POST http://localhost:8000/run_inference -H "Content-Type: application/json" -d '{"image_url":"https://example.com/test.jpg"}'
-   ```
+## Deployment on Google Cloud
 
-2. Raindrop backend (local):
-   ```
-   cd server
-   npm install
-   RAINDROP_API_URL=http://localhost:8000 RAINDROP_SDK_KEY=demo node index.js
-   ```
-   (Note: when deployed on Raindrop, use the platform's environment variables and endpoints.)
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/debris-ai-backend.git
+    cd debris-ai-backend
+    ```
 
-## Deploying
-- Build & push inference Docker image, deploy to Vultr, set the public URL in `raindrop.manifest.yaml`.
-- Deploy `raindrop.manifest.yaml` with Raindrop CLI: `raindrop deploy --manifest raindrop.manifest.yaml`
-- Deploy the Node backend to Raindrop MCP (follow Raindrop MCP docs) or run as a service and configure CORS.
+2.  **Set up a Google Cloud project:**
+    *   Create a new project in the [Google Cloud Console](https://console.cloud.google.com/).
+    *   Enable the Cloud Run, Cloud Storage, and Vertex AI APIs.
+    *   Create a service account with the "Cloud Run Invoker", "Storage Object Admin", and "Vertex AI User" roles.
+    *   Download the service account key as a JSON file and save it as `gcp-credentials.json` in the project root.
 
-## Next steps
-- Replace placeholder inference with your finetuned model (PyTorch/ONNX/Triton).
-- Secure secrets (RAINDROP_SDK_KEY, ELEVENLABS_KEY) in Raindrop env or Vercel secrets.
-- Connect Framer frontend to the Raindrop backend `/infer` endpoint.
+3.  **Configure Confluent Cloud:**
+    *   Create a new Kafka cluster in [Confluent Cloud](https://confluent.cloud/).
+    *   Create a new topic for the inference results.
+    *   Generate API keys for the Kafka cluster.
+
+4.  **Set up environment variables:**
+    *   Create a `.env` file in the project root and add the following variables:
+        ```
+        GOOGLE_APPLICATION_CREDENTIALS=gcp-credentials.json
+        KAFKA_BOOTSTRAP_SERVERS=<your-kafka-bootstrap-servers>
+        KAFKA_API_KEY=<your-kafka-api-key>
+        KAFKA_API_SECRET=<your-kafka-api-secret>
+        KAFKA_TOPIC=<your-kafka-topic>
+        ```
+
+5.  **Build and deploy the Docker image:**
+    *   Build the Docker image:
+        ```bash
+        docker build -t gcr.io/your-gcp-project-id/debris-ai-backend .
+        ```
+    *   Push the Docker image to Google Container Registry:
+        ```bash
+        docker push gcr.io/your-gcp-project-id/debris-ai-backend
+        ```
+    *   Deploy the image to Cloud Run:
+        ```bash
+        gcloud run deploy debris-ai-backend \
+          --image gcr.io/your-gcp-project-id/debris-ai-backend \
+          --platform managed \
+          --region us-central1 \
+          --allow-unauthenticated
+        ```
+
+## API Endpoints
+
+*   `POST /analyze-image`: Accepts an image file and returns a JSON object with the analysis results.
+*   `POST /chat`: (Not implemented in this version)
+
+## Kafka Producer
+
+The `kafka_producer.py` module sends the analysis results to a Kafka topic in Confluent Cloud.
