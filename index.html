@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEBRIS AI — Analyze</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --bg-card-hover: #1a1a1a;
+      --border: #2a2a2a;
+      --border-light: #333;
+      --text: #f0ede6;
+      --text-muted: #8a8780;
+      --text-dim: #5a5854;
+      --accent: #c8b88a;
+      --accent-soft: #c8b88a22;
+      --green: #4a7c59;
+      --green-soft: #4a7c5922;
+      --orange: #c4863b;
+      --orange-soft: #c4863b22;
+      --red: #9b4d4d;
+      --red-soft: #9b4d4d22;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-lg: 24px;
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: #0a0a0acc;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 40px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 50%, #c8b88a08 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 50%, #4a7c5906 0%, transparent 50%);
+      animation: heroGlow 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes heroGlow {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-2%, 2%) rotate(3deg); }
+    }
+
+    .hero-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 400;
+      line-height: 1.05;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+      font-weight: 300;
+      position: relative;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 36px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 100px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .hero-cta:hover { transform: scale(1.04); background: var(--accent); }
+    .hero-cta svg { width: 18px; height: 18px; }
+
+    /* UPLOAD SECTION */
+    .analyze-section {
+      padding: 40px 40px 120px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 400;
+    }
+
+    /* UPLOAD AREA */
+    .upload-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .upload-zone {
+      border: 1.5px dashed var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 60px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      background: var(--bg-card);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent);
+      background: var(--bg-card-hover);
+    }
+
+    .upload-zone.dragging {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .upload-zone.has-image {
+      padding: 0;
+      border-style: solid;
+      border-color: var(--border-light);
+    }
+
+    .upload-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .upload-icon svg { width: 24px; height: 24px; color: var(--accent); }
+
+    .upload-zone h3 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+
+    .upload-zone p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 300;
+    }
+
+    .upload-zone img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+    }
+
+    #fileInput { display: none; }
+
+    /* PREVIEW PANEL */
+    .preview-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .preview-placeholder {
+      text-align: center;
+      color: var(--text-dim);
+    }
+
+    .preview-placeholder svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .preview-placeholder p {
+      font-size: 0.9rem;
+      font-weight: 300;
+    }
+
+    /* ANALYZE BUTTON */
+    .analyze-btn-wrap { text-align: center; margin-bottom: 60px; }
+
+    .analyze-btn {
+      padding: 18px 48px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 100px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      letter-spacing: 0.02em;
+    }
+
+    .analyze-btn:hover:not(:disabled) {
+      background: var(--accent);
+      transform: scale(1.03);
+    }
+
+    .analyze-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .analyze-btn.loading {
+      background: var(--border-light);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* RESULTS */
+    .results { display: none; }
+    .results.visible { display: block; }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-header h2 {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      font-weight: 400;
+    }
+
+    .reuse-score {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .reuse-score-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+    }
+
+    .reuse-score-value {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      color: var(--accent);
+    }
+
+    /* SUMMARY CARD */
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    .summary-card p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-weight: 300;
+      font-size: 0.95rem;
+    }
+
+    /* MATERIAL CARDS */
+    .materials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .material-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: all 0.3s;
+    }
+
+    .material-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
+    }
+
+    .material-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .material-name {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 400;
+    }
+
+    .material-pct {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      background: var(--accent-soft);
+      padding: 4px 12px;
+      border-radius: 100px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .condition-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    .condition-good { background: var(--green-soft); color: var(--green); }
+    .condition-fair { background: var(--orange-soft); color: var(--orange); }
+    .condition-poor, .condition-severely { background: var(--red-soft); color: var(--red); }
+
+    .safety-note {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      padding: 10px 14px;
+      background: #ffffff06;
+      border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+      line-height: 1.5;
+      border-left: 2px solid var(--border-light);
+    }
+
+    .reuse-ideas-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .reuse-idea {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-bottom: 1px solid #ffffff08;
+    }
+
+    .reuse-idea:last-child { border-bottom: none; }
+
+    .idea-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+
+    .idea-content { flex: 1; }
+
+    .idea-text {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+
+    .idea-meta {
+      display: flex;
+      gap: 8px;
+    }
+
+    .idea-tag {
+      font-size: 0.68rem;
+      padding: 2px 10px;
+      border-radius: 100px;
+      background: #ffffff08;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ACTION CARD */
+    .action-card {
+      background: linear-gradient(135deg, var(--accent-soft), var(--green-soft));
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      margin-bottom: 24px;
+    }
+
+    .action-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      font-weight: 400;
+    }
+
+    .action-card p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-size: 0.95rem;
+      font-weight: 300;
+    }
+
+    .env-card {
+      background: var(--green-soft);
+      border: 1px solid #4a7c5944;
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 40px;
+    }
+
+    .env-card p {
+      color: var(--green);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+    }
+
+    footer p {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      font-weight: 300;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* LOADING */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0a0a0aee;
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .loading-overlay.visible {
+      display: flex;
+    }
+
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--text-muted);
+    }
+
+    .loading-sub {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-weight: 300;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .nav-links { gap: 20px; }
+      .nav-links a { font-size: 0.75rem; }
+      .hero { padding: 100px 20px 60px; }
+      .analyze-section { padding: 20px 20px 80px; }
+      .upload-container { grid-template-columns: 1fr; }
+      .upload-zone { min-height: 280px; padding: 40px 24px; }
+      .preview-panel { min-height: 200px; padding: 24px; }
+      .materials-grid { grid-template-columns: 1fr; }
+      .results-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    }
+
+    /* ANIMATIONS */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    .fade-in-delay { animation-delay: 0.15s; }
+    .fade-in-delay-2 { animation-delay: 0.3s; }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-enter {
+      opacity: 0;
+      transform: translateY(16px);
+      animation: fadeIn 0.5s ease forwards;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="https://debrisai.framer.website/" class="nav-logo">DEBRIS AI</a>
+    <div class="nav-links">
+      <a href="https://debrisai.framer.website/">Home</a>
+      <a href="#analyze" class="active">Analyze</a>
+      <a href="https://debrisai.framer.website/community">Community</a>
+      <a href="https://debrisai.framer.website/journal">Journal</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero-label fade-in">DEBRIS AI · VISION INTELLIGENCE</div>
+    <h1 class="fade-in fade-in-delay">See potential in<br>every <em>fragment</em></h1>
+    <p class="hero-sub fade-in fade-in-delay-2">
+      Upload an image of debris, rubble, or discarded material. Our AI identifies every material and reveals creative ways to reuse what others discard.
+    </p>
+    <a href="#analyze" class="hero-cta fade-in fade-in-delay-2">
+      Start Analyzing
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17l10-10M7 7h10v10"/></svg>
+    </a>
+  </section>
+
+  <!-- ANALYZE -->
+  <section class="analyze-section" id="analyze">
+    <div class="section-header">
+      <div class="section-label">Material Analysis</div>
+      <h2>Upload debris. Discover possibility.</h2>
+    </div>
+
+    <div class="upload-container">
+      <!-- Upload Zone -->
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 16V4m0 0L8 8m4-4l4 4"/>
+            <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+          </svg>
+        </div>
+        <h3>Drop your image here</h3>
+        <p>or click to browse · JPG, PNG up to 10MB</p>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+
+      <!-- Preview Panel -->
+      <div class="preview-panel" id="previewPanel">
+        <div class="preview-placeholder" id="previewPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <p>Your analysis will appear here</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="analyze-btn-wrap">
+      <button class="analyze-btn" id="analyzeBtn" disabled onclick="analyzeImage()">
+        Analyze Debris
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="results" id="results"></div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">DEBRIS AI</div>
+    <p>Made by <a href="https://dishana.github.io/" target="_blank">Dishana</a> · ©2025 DEBRIS AI</p>
+  </footer>
+
+  <!-- LOADING -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader"></div>
+    <div class="loading-text">Analyzing debris...</div>
+    <div class="loading-sub">Identifying materials and finding reuse potential</div>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIG — Replace with your Vercel backend URL after deploying
+    // ============================================================
+    const API_URL = 'YOUR_VERCEL_URL/api/analyze';
+
+    let currentImageBase64 = null;
+
+    // DRAG & DROP
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+
+    ['dragenter', 'dragover'].forEach(e => {
+      uploadZone.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        uploadZone.classList.add('dragging');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(e => {
+      uploadZone.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        uploadZone.classList.remove('dragging');
+      });
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        // Extract base64 without the data:image/xxx;base64, prefix
+        currentImageBase64 = dataUrl.split(',')[1];
+
+        // Show preview in upload zone
+        uploadZone.innerHTML = `<img src="${dataUrl}" alt="Uploaded debris image">`;
+        uploadZone.classList.add('has-image');
+        uploadZone.onclick = () => fileInput.click();
+
+        // Enable button
+        document.getElementById('analyzeBtn').disabled = false;
+
+        // Clear previous results
+        document.getElementById('results').classList.remove('visible');
+        document.getElementById('results').innerHTML = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ANALYZE
+    async function analyzeImage() {
+      if (!currentImageBase64) return;
+
+      const btn = document.getElementById('analyzeBtn');
+      const overlay = document.getElementById('loadingOverlay');
+
+      btn.classList.add('loading');
+      btn.textContent = 'Analyzing...';
+      overlay.classList.add('visible');
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: currentImageBase64 }),
+        });
+
+        if (!response.ok) throw new Error('Analysis failed');
+
+        const data = await response.json();
+        renderResults(data);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('results').innerHTML = `
+          <div class="summary-card">
+            <h3>Something went wrong</h3>
+            <p>Could not analyze the image. Please check your API configuration and try again. Error: ${err.message}</p>
+          </div>
+        `;
+        document.getElementById('results').classList.add('visible');
+      } finally {
+        overlay.classList.remove('visible');
+        btn.classList.remove('loading');
+        btn.textContent = 'Analyze Again';
+      }
+    }
+
+    // RENDER RESULTS
+    function renderResults(data) {
+      const el = document.getElementById('results');
+
+      const conditionClass = (c) => {
+        if (!c) return 'condition-fair';
+        const lower = c.toLowerCase();
+        if (lower.includes('good')) return 'condition-good';
+        if (lower.includes('fair')) return 'condition-fair';
+        return 'condition-poor';
+      };
+
+      let materialsHTML = '';
+      if (data.materials && data.materials.length > 0) {
+        materialsHTML = data.materials.map((m, i) => `
+          <div class="material-card card-enter" style="animation-delay: ${i * 0.1}s">
+            <div class="material-top">
+              <div class="material-name">${m.name}</div>
+              <div class="material-pct">${m.percentage || '—'}</div>
+            </div>
+            <div class="condition-badge ${conditionClass(m.condition)}">${m.condition || 'Unknown'}</div>
+            ${m.safety_notes ? `<div class="safety-note">⚠ ${m.safety_notes}</div>` : ''}
+            <div class="reuse-ideas-title">Reuse Ideas</div>
+            ${(m.reuse_ideas || []).map(idea => `
+              <div class="reuse-idea">
+                <div class="idea-dot"></div>
+                <div class="idea-content">
+                  <div class="idea-text">${idea.idea}</div>
+                  <div class="idea-meta">
+                    <span class="idea-tag">${idea.difficulty || 'Medium'}</span>
+                    <span class="idea-tag">${idea.category || 'Other'}</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `).join('');
+      }
+
+      el.innerHTML = `
+        <div class="results-header card-enter">
+          <h2>Analysis Complete</h2>
+          <div class="reuse-score">
+            <div class="reuse-score-label">Reuse Score</div>
+            <div class="reuse-score-value">${data.overall_reuse_score || '—'}/10</div>
+          </div>
+        </div>
+
+        <div class="summary-card card-enter" style="animation-delay: 0.1s">
+          <h3>Overview</h3>
+          <p>${data.summary || 'No summary available.'}</p>
+        </div>
+
+        ${data.recommended_action ? `
+          <div class="action-card card-enter" style="animation-delay: 0.15s">
+            <h3>Recommended Action</h3>
+            <p>${data.recommended_action}</p>
+          </div>
+        ` : ''}
+
+        <div class="section-label" style="margin-bottom: 20px">Identified Materials</div>
+        <div class="materials-grid">${materialsHTML}</div>
+
+        ${data.environmental_impact ? `
+          <div class="env-card card-enter">
+            <p>🌱 ${data.environmental_impact}</p>
+          </div>
+        ` : ''}
+      `;
+
+      el.classList.add('visible');
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  </script>
+</body>
+</html>
