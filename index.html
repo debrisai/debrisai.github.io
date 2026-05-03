@@ -736,7 +736,7 @@
     // ============================================================
     // CONFIG — Replace with your Vercel backend URL after deploying
     // ============================================================
-    const API_URL = 'https://debris-ai-back.vercel.app/api/analyze';
+    const API_URL = 'YOUR_VERCEL_URL/api/analyze';
 
     let currentImageBase64 = null;
 
@@ -768,28 +768,53 @@
       if (file) handleFile(file);
     });
 
-    function handleFile(file) {
+    // Compress image to max 1MB base64 for API
+    function compressImage(file) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          img.onload = () => {
+            // Scale down if too large
+            let w = img.width;
+            let h = img.height;
+            const MAX = 1024;
+            if (w > MAX || h > MAX) {
+              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+              else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            resolve(dataUrl);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFile(file) {
       if (!file.type.startsWith('image/')) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        // Extract base64 without the data:image/xxx;base64, prefix
-        currentImageBase64 = dataUrl.split(',')[1];
+      const dataUrl = await compressImage(file);
+      currentImageBase64 = dataUrl.split(',')[1];
 
-        // Show preview in upload zone
-        uploadZone.innerHTML = `<img src="${dataUrl}" alt="Uploaded debris image">`;
-        uploadZone.classList.add('has-image');
-        uploadZone.onclick = () => fileInput.click();
+      // Show preview in upload zone
+      uploadZone.innerHTML = `<img src="${dataUrl}" alt="Uploaded debris image">`;
+      uploadZone.classList.add('has-image');
+      uploadZone.onclick = () => fileInput.click();
 
-        // Enable button
-        document.getElementById('analyzeBtn').disabled = false;
+      // Enable button
+      document.getElementById('analyzeBtn').disabled = false;
 
-        // Clear previous results
-        document.getElementById('results').classList.remove('visible');
-        document.getElementById('results').innerHTML = '';
-      };
-      reader.readAsDataURL(file);
+      // Clear previous results
+      document.getElementById('results').classList.remove('visible');
+      document.getElementById('results').innerHTML = '';
     }
 
     // ANALYZE
@@ -810,16 +835,21 @@
           body: JSON.stringify({ image: currentImageBase64 }),
         });
 
-        if (!response.ok) throw new Error('Analysis failed');
-
+        // Read the response body regardless of status
         const data = await response.json();
+
+        if (!response.ok) {
+          const detail = data.details ? JSON.stringify(data.details) : data.error || 'Unknown error';
+          throw new Error(detail);
+        }
+
         renderResults(data);
       } catch (err) {
         console.error(err);
         document.getElementById('results').innerHTML = `
           <div class="summary-card">
             <h3>Something went wrong</h3>
-            <p>Could not analyze the image. Please check your API configuration and try again. Error: ${err.message}</p>
+            <p>Could not analyze the image. Error: ${err.message}</p>
           </div>
         `;
         document.getElementById('results').classList.add('visible');
